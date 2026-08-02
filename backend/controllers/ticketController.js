@@ -47,10 +47,11 @@ if (priority && !validPriorities.includes(priority)) {
 
     } catch (error) {
 
-        console.log(error);
+        console.error(error);
 
-        res.status(500).send("Something went wrong.");
-
+return res.status(500).json({
+    message: "Internal Server Error"
+});
     }
 
 };
@@ -86,9 +87,11 @@ const skip = (page - 1) * limit;
 
     } catch (error) {
 
-        console.log(error);
+        console.error(error);
 
-        res.status(500).send("Something went wrong.");
+return res.status(500).json({
+    message: "Internal Server Error"
+});
 
     }
 
@@ -107,9 +110,11 @@ const getMyTickets = async (req, res) => {
 
     } catch (error) {
 
-        console.log(error);
+        console.error(error);
 
-        res.status(500).send("Something went wrong.");
+return res.status(500).json({
+    message: "Internal Server Error"
+});
 
     }
 
@@ -128,10 +133,11 @@ const getAssignedTickets = async (req, res) => {
 
     } catch (error) {
 
-        console.log(error);
+       console.error(error);
 
-        res.status(500).send("Something went wrong.");
-
+return res.status(500).json({
+    message: "Internal Server Error"
+});
     }
 
 };
@@ -142,8 +148,10 @@ const getTicketById = async (req, res) => {
         const ticketId = req.params.id;
 
         const ticket = await Ticket.findById(ticketId)
-            .populate("createdBy", "name email")
-            .populate("assignedTo", "name email");
+    .populate("createdBy", "name email")
+    .populate("assignedTo", "name email")
+    .populate("comments.commentedBy", "name email")
+    .populate("history.performedBy", "name email");
 
         if (!ticket) {
             return res.status(404).send("Ticket not found.");
@@ -153,9 +161,11 @@ const getTicketById = async (req, res) => {
 
     } catch (error) {
 
-        console.log(error);
+        console.error(error);
 
-        res.status(500).send("Something went wrong.");
+return res.status(500).json({
+    message: "Internal Server Error"
+});
 
     }
 
@@ -164,7 +174,22 @@ const updateTicket = async (req, res) => {
 
     const ticketId = req.params.id;
 
-    const status = req.body.status;
+    const { title, description, priority, status, assignedTo } = req.body;
+
+    if (!title || !description) {
+        return res.status(400).send("Please provide title and description.");
+    }
+
+    const validPriorities = ["Low", "Medium", "High", "Critical"];
+
+    if (!validPriorities.includes(priority)) {
+        return res.status(400).send("Invalid priority.");
+    }
+    const validStatuses = ["Open", "In Progress", "Resolved", "Closed"];
+
+if (!validStatuses.includes(status)) {
+    return res.status(400).send("Invalid status.");
+}
 
     try {
 
@@ -174,57 +199,67 @@ const updateTicket = async (req, res) => {
             return res.status(404).send("Ticket not found.");
         }
 
-        if (ticket.createdBy.toString() !== req.user.id) {
-            return res.status(403).send("You are not authorized to update this ticket.");
-        }
-
-        if (!status) {
-            return res.status(400).send("Please provide the status.");
-        }
-        const validStatuses = [
-    "Open",
-    "In Progress",
-    "Resolved",
-    "Closed"
-];
-
-if (!validStatuses.includes(status)) {
-    return res.status(400).send("Invalid status.");
+        if (
+    ticket.createdBy.toString() !== req.user.id &&
+    req.user.role !== "admin"
+) {
+    return res.status(403).send("You are not authorized to update this ticket.");
 }
 
-        const updatedTicket = await Ticket.findByIdAndUpdate(
-            ticketId,
-            {
-                status: status
-            },
-            {
-                new: true
-            }
-        )
-        .populate("createdBy", "name email")
-        .populate("assignedTo", "name email");
+       ticket.title = title;
+ticket.description = description;
+ticket.priority = priority;
 
-        res.json(updatedTicket);
+if (req.user.role === "admin") {
+    const oldAssignedTo = ticket.assignedTo
+    ? ticket.assignedTo.toString()
+    : null;
+    ticket.assignedTo = assignedTo;
+    if (assignedTo && assignedTo !== oldAssignedTo) {
+
+    ticket.history.push({
+
+        action: "Ticket Assigned",
+
+        performedBy: req.user.id
+
+    });
+
+}
+    if (assignedTo && ticket.status === "Open") {
+
+        ticket.status = "In Progress";
+
+    } else {
+
+        ticket.status = status;
+
+    }
+
+}
+   
+        await ticket.save();
+
+        res.json(ticket);
 
     } catch (error) {
+        console.error(error);
 
-        console.log(error);
+return res.status(500).json({
+    message: "Internal Server Error"
+});
 
-        res.status(500).send("Something went wrong.");
 
     }
 
 };
+
 const assignTicket = async (req, res) => {
 
     const ticketId = req.params.id;
     const assignedTo = req.body.assignedTo;
     if (!assignedTo) {
         return res.status(400).send("Please provide the user ID to assign the ticket.");
-    }
-
-    if (req.user.role !== "admin") {
-        return res.status(403).send("Only Admin can assign tickets.");
     }
 
     if (req.user.role !== "admin") {
@@ -260,10 +295,13 @@ const assignTicket = async (req, res) => {
     res.json(updatedTicket);
 
 } catch (error) {
+    console.error(error);
 
-    console.log(error);
+return res.status(500).json({
+    message: "Internal Server Error"
+});
 
-    res.status(500).send("Something went wrong.");
+   
 
 }
 
@@ -313,9 +351,11 @@ const addComment = async (req, res) => {
 
     } catch (error) {
 
-        console.log(error);
+        console.error(error);
 
-        res.status(500).send("Something went wrong.");
+return res.status(500).json({
+    message: "Internal Server Error"
+});
 
     }
 
@@ -356,10 +396,11 @@ const resolveTicket = async (req, res) => {
 
 } catch (error) {
 
-    console.log(error);
+    console.error(error);
 
-    res.status(500).send("Something went wrong.");
-
+return res.status(500).json({
+    message: "Internal Server Error"
+});
 }
 
 
@@ -403,10 +444,11 @@ const closeTicket = async (req, res) => {
     res.json(updatedTicket);
 
 } catch (error) {
+    console.error(error);
 
-    console.log(error);
-
-    res.status(500).send("Something went wrong.");
+return res.status(500).json({
+    message: "Internal Server Error"
+});
 
 }
 
@@ -433,9 +475,11 @@ const deleteTicket = async (req, res) => {
 
     } catch (error) {
 
-        console.log(error);
+        console.error(error);
 
-        res.status(500).send("Something went wrong.");
+return res.status(500).json({
+    message: "Internal Server Error"
+});
 
     }
 
@@ -501,10 +545,11 @@ const criticalPriorityTickets = await Ticket.countDocuments({
 });
 
     } catch (error) {
+        console.error(error);
 
-        console.log(error);
-
-        res.status(500).send("Something went wrong.");
+return res.status(500).json({
+    message: "Internal Server Error"
+});
 
     }
 
@@ -529,9 +574,11 @@ const getPriorityStats = async (req, res) => {
 
     } catch (error) {
 
-        console.log(error);
+        console.error(error);
 
-        res.status(500).send("Something went wrong.");
+return res.status(500).json({
+    message: "Internal Server Error"
+});
 
     }
 
@@ -559,9 +606,11 @@ const getStatusStats = async (req, res) => {
 
     } catch (error) {
 
-        console.log(error);
+        console.error(error);
 
-        res.status(500).send("Something went wrong.");
+return res.status(500).json({
+    message: "Internal Server Error"
+});
 
     }
 
@@ -580,9 +629,11 @@ const getRecentTickets = async (req, res) => {
 
     } catch (error) {
 
-        console.log(error);
+        console.error(error);
 
-        res.status(500).send("Something went wrong.");
+return res.status(500).json({
+    message: "Internal Server Error"
+});
 
     }
 
@@ -591,28 +642,90 @@ const searchTickets = async (req, res) => {
 
     const title = req.query.title;
 
+    const status = req.query.status;
+    const priority = req.query.priority;
+
     try {
 
-        const tickets = await Ticket.find({
+        let query = {
 
             title: {
                 $regex: title,
                 $options: "i"
             }
 
-        })
-        .populate("createdBy", "name email")
-        .populate("assignedTo", "name email");
+        };
+
+        if (status && status !== "All") {
+
+            query.status = status;
+
+        }
+
+        if (priority && priority !== "All") {
+
+    query.priority = priority;
+
+}
+       
+
+        const sort = req.query.sort;
+
+let sortOption = {};
+
+if (sort === "Newest") {
+
+    sortOption = { createdAt: -1 };
+
+}
+else if (sort === "Oldest") {
+
+    sortOption = { createdAt: 1 };
+
+}
+
+
+const tickets = await Ticket.find(query)
+    .populate("createdBy", "name email")
+    .populate("assignedTo", "name email")
+    .sort(sortOption);
+
+const priorityOrder = {
+    Low: 1,
+    Medium: 2,
+    High: 3,
+    Critical: 4
+};
+
+if (sort === "HighPriority") {
+
+    tickets.sort(
+        (a, b) =>
+            priorityOrder[b.priority] - priorityOrder[a.priority]
+    );
+
+}
+
+if (sort === "LowPriority") {
+
+    tickets.sort(
+        (a, b) =>
+            priorityOrder[a.priority] - priorityOrder[b.priority]
+    );
+
+}
 
         res.json(tickets);
 
     } catch (error) {
 
-        console.log(error);
+    console.error(error);
 
-        res.status(500).send("Something went wrong.");
+    res.status(500).json({
+        message: "Internal Server Error"
+    });
 
-    }
+}
 
 };
 module.exports = {

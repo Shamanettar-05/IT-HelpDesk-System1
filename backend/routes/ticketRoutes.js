@@ -1,5 +1,5 @@
 const express = require("express");
-console.log("ticketRoutes loaded");
+
 const router = express.Router();
 
 const authMiddleware = require("../middleware/authMiddleware");

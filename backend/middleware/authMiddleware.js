@@ -2,16 +2,26 @@ const jwt = require("jsonwebtoken");
 
 const authMiddleware = (req, res, next) => {
 
-    const token = req.headers.authorization;
+    const authHeader = req.headers.authorization;
 
-    if (!token) {
-        return res.status(401).send("Access Denied.");
+    if (!authHeader) {
+        return res.status(401).json({
+            message: "Access Denied. No token provided."
+        });
     }
+
+    if (!authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({
+            message: "Invalid Authorization Header."
+        });
+    }
+
+    const token = authHeader.replace("Bearer ", "");
 
     try {
 
         const decoded = jwt.verify(
-            token,
+            token.trim(),
             process.env.JWT_SECRET
         );
 
@@ -21,9 +31,14 @@ const authMiddleware = (req, res, next) => {
 
     } catch (error) {
 
-        res.status(401).send("Invalid Token.");
+   
 
-    }
+    return res.status(401).json({
+        error: error.name,
+        message: error.message
+    });
+
+}
 
 };
 

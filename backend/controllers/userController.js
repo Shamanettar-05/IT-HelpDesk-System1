@@ -36,11 +36,13 @@ const registerUser = async (req, res) => {
 
     } catch (error) {
 
-        console.log(error);
+    console.error(error);
 
-        res.status(500).send("Something went wrong.");
+    return res.status(500).json({
+        message: "Internal Server Error"
+    });
 
-    }
+}
 
 };
 
@@ -84,16 +86,36 @@ const loginUser = async (req, res) => {
 
     } catch (error) {
 
-        console.log(error);
+    console.error(error);
 
-        res.status(500).send("Something went wrong.");
+    return res.status(500).json({
+        message: "Internal Server Error"
+    });
 
-    }
+}
 
 };
-const getProfile = (req, res) => {
+const getProfile = async (req, res) => {
 
-    res.send("Welcome " + req.user.email);
+    try {
+
+        const user = await User.findById(req.user.id).select("-password");
+
+        if (!user) {
+            return res.status(404).send("User not found.");
+        }
+
+        res.json(user);
+
+    } catch (error) {
+
+    console.error(error);
+
+    return res.status(500).json({
+        message: "Internal Server Error"
+    });
+
+}
 
 };
 const getAllUsers = async (req, res) => {
@@ -110,11 +132,13 @@ const getAllUsers = async (req, res) => {
 
     } catch (error) {
 
-        console.log(error);
+    console.error(error);
 
-        res.status(500).send("Something went wrong.");
+    return res.status(500).json({
+        message: "Internal Server Error"
+    });
 
-    }
+}
 
 };
 module.exports = {
