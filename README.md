@@ -148,17 +148,27 @@ npm run dev
 
 # 📸 Screenshots
 
-> Add your screenshots inside an **images** folder.
-
-### 🔐 Login
+### 🔐 Login Page
 
 ![Login](images/login.png)
 
 ---
 
-### 🏠 Dashboard
+### 📝 Register Page
 
-![Dashboard](images/dashboard.png)
+![Register](images/register.png)
+
+---
+
+### 👤 User Dashboard
+
+![User Dashboard](images/user-dashboard.png)
+
+---
+
+### 🎫 User Tickets
+
+![User Tickets](images/user-tickets.png)
 
 ---
 
@@ -171,6 +181,12 @@ npm run dev
 ### 👨‍💼 Admin Dashboard
 
 ![Admin Dashboard](images/admin-dashboard.png)
+
+---
+
+### 📋 Admin Ticket Management
+
+![Admin Tickets](images/admin-tickets.png)
 
 ---
 
