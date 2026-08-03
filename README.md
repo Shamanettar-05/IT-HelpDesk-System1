@@ -84,10 +84,18 @@ IT-HelpDesk-System1
 │   ├── package.json
 │   └── vite.config.js
 │
+├── images
+│   ├── login.png
+│   ├── register.png
+│   ├── user-dashboard.png
+│   ├── user-tickets.png
+│   ├── create-ticket.png
+│   ├── admin-dashboard.png
+│   └── admin-tickets.png
+│
+├── .gitignore
 └── README.md
 ```
-
----
 
 # 🚀 Getting Started
 
